@@ -2,7 +2,7 @@
 
 **Dhanush P Sukruth** · November 1, 2026
 
-**[paper.pdf](paper.pdf)** · LaTeX source: [paper.tex](paper.tex)
+**[paper.pdf](paper.pdf)** · LaTeX source: [paper.tex](paper.tex) · Explainer with diagrams: [blog post](blog/README.md)
 
 ## Summary
 
