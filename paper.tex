@@ -1,0 +1,336 @@
+\documentclass[11pt]{amsart}
+\usepackage[margin=1.15in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage[hidelinks]{hyperref}
+\usepackage{enumitem}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{fact}[theorem]{Fact}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\poly}{\mathrm{poly}}
+\newcommand{\VC}{\textup{\textsc{Vertex Cover}}}
+\newcommand{\MC}{\textup{\textsc{Max-Cut}}}
+\newcommand{\MS}{\textup{\textsc{Max-$c$-SAT}}}
+\newcommand{\IS}{\textup{\textsc{Independent Set}}}
+\newcommand{\DS}{\textup{\textsc{Dominating Set}}}
+\newcommand{\FPT}{\mathrm{FPT}}
+
+\title[Subexponential parameterized algorithms after ETH]{Subexponential parameterized algorithms from the claimed refutation of ETH: Vertex Cover, Max-Cut, Max-$c$-SAT and bounded-degree problems in time $2^{o(k)}$}
+
+\author{Dhanush P Sukruth}
+\address{University of Maryland, College Park, MD, USA}
+\email{sukruthdhanush@gmail.com}
+
+\date{November 1, 2026}
+
+\begin{document}
+
+\begin{abstract}
+OpenAI and Anthropic have each claimed a deterministic algorithm that counts the satisfying assignments of a $w$-CNF formula on $N$ variables in time $2^{O_w(N\log\log N/\sqrt{\log N})}$, and in time $2^{O_w(N/\sqrt{\log N})}$ when the number of clauses is $O(N)$. The claims are not yet peer reviewed. Taking this counting theorem as a black box, we turn several classical $2^{o(k)}$ lower bounds of parameterized complexity, all of which were conditional on ETH, into explicit algorithms. Here $k$ is the solution size. \VC{} can be decided in time $2^{O(k\log\log k/\sqrt{\log k})}+n^{O(1)}$. \MC{} and \MS{} (for fixed $c$) can be decided in time $2^{O(k/\sqrt{\log k})}+n^{O(1)}$. On graphs of maximum degree $\Delta$, \IS, \VC{} and \DS{} can be decided in time $2^{O_\Delta(k/\sqrt{\log k})}+n^{O(1)}$, and the dominating sets of size at most $k$ can be counted within the same bound. All algorithms are deterministic, find a solution when one exists, and have the form ``kernel, then count''. For the Max-SNP-complete problems among these, the qualitative statement that $2^{o(k)}n^{O(1)}$ algorithms exist already follows from an equivalence of Cai and Juedes. Qualitative $2^{o(k)}$ versions of the remaining statements also follow quickly from a corollary in Anthropic's paper. Our contribution is the explicit rates $k/\sqrt{\log k}$ and $k\log\log k/\sqrt{\log k}$, with short self-contained proofs. The results are of theoretical interest only.
+\end{abstract}
+
+\maketitle
+
+\section{Introduction}
+
+The Exponential Time Hypothesis (ETH) of Impagliazzo and Paturi~\cite{IP01} states that there is a $\delta>0$ such that 3-SAT on $n$ variables cannot be solved in time $O(2^{\delta n})$. In parameterized complexity, ETH was the standard way to show that a fixed-parameter tractable problem has no algorithm that is \emph{subexponential in the parameter}. The best-known example is \VC{} parameterized by the solution size $k$. It is solvable in time $2^{O(k)}n^{O(1)}$, and under ETH it has no $2^{o(k)}n^{O(1)}$ algorithm~\cite{CJ03}; see also~\cite[Chapter~14]{CFK15}. Cai and Juedes~\cite{CJ03} proved lower bounds of this kind for \VC, \MC, \MS, and for \IS{} and \DS{} on graphs of bounded degree. They also proved that every Max-SNP-complete problem is solvable in time $O(2^{o(k)}p(n))$ if and only if 3-SAT is solvable in time $2^{o(n)}$.
+
+On October 26, 2026, OpenAI~\cite{Ope26} and Anthropic~\cite{Cla26} independently released papers claiming deterministic algorithms that count the satisfying assignments of a $k$-CNF formula in subexponential time. Both come with Lean formalizations. This refutes ETH, provided the claims are correct. The claims are being examined by a group led by Impagliazzo, Paturi and Williams. Both papers derive consequences for problems measured in the number $n$ of vertices or variables. These include counting independent sets and colorings and circuit lower bounds for $\mathrm{E}^{\mathrm{NP}}$ (both papers), counting perfect matchings and approximating Max-$k$-SAT~\cite{Ope26}, and counting vertex covers, cliques and dominating sets of a given size~\cite{Cla26}. Both papers mention ETH-based lower bounds in parameterized complexity, but neither derives algorithms for problems parameterized by solution size.
+
+This note does so for the problems above, with explicit rates. All results are conditional on the counting theorem of~\cite{Ope26,Cla26}, restated as Theorem~\ref{thm:blackbox} below.
+
+\subsection{Results}
+
+Throughout, $\log$ is the natural logarithm, and for $N\ge 3$ we write
+\[
+\varphi(N)=\frac{N\log\log N}{\sqrt{\log N}},\qquad \psi(N)=\frac{N}{\sqrt{\log N}}.
+\]
+Both are $o(N)$. In running times, $n^{O(1)}$ stands for a polynomial in the size of the input.
+
+\begin{theorem}\label{thm:main}
+Assume Theorem~\ref{thm:blackbox}. There are deterministic algorithms that, given an instance with parameter $k$, decide the following problems and output a solution when one exists, within the stated time bounds.
+\begin{enumerate}[label=(\alph*)]
+\item \VC{} (is there a vertex cover of size at most $k$?): $2^{O(\varphi(k))}+n^{O(1)}$.
+\item \MC{} (is there a cut with at least $k$ edges?): $2^{O(\psi(k))}+n^{O(1)}$.
+\item \MS{} for each fixed $c\ge 1$, with nonempty clauses (is there an assignment satisfying at least $k$ clauses of a CNF whose clauses have at most $c$ literals?): $2^{O_c(\psi(k))}+n^{O(1)}$.
+\item On graphs of maximum degree at most a fixed $\Delta$: \IS{} (size at least $k$), \VC{} (size at most $k$) and \DS{} (size at most $k$): $2^{O_\Delta(\psi(k))}+n^{O(1)}$. Moreover, for every $s\le k$ the number of dominating sets of size exactly $s$ can be computed within the same bound.
+\end{enumerate}
+\end{theorem}
+
+Table~\ref{tab:results} compares these bounds with the previous situation. The proofs share a simple pattern. A polynomial-time step either answers the instance directly or reduces it to an equivalent instance with $O(k)$ elements, which is a linear kernel. The reduced instance is then encoded as a CNF of bounded width with $O(k)$ variables that preserves the number of solutions, and Theorem~\ref{thm:blackbox} counts its satisfying assignments. The only part needing some care is the cardinality constraint. Encoding it naively would use $\Theta(k\log k)$ auxiliary variables, which would destroy the subexponential bound. As in~\cite[proof of Theorem~5]{IPZ01} and~\cite[proof of Corollary~7]{Cla26}, we use a linear-size counting circuit (Lemma~\ref{lem:card}), which gives $O(N)$ auxiliary variables.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+Problem, parameter $k$ & Lower bound under ETH & Here (assuming Thm.~\ref{thm:blackbox}) \\
+\midrule
+Vertex Cover & no $2^{o(k)}n^{O(1)}$ \cite{CJ03} & $2^{O(k\log\log k/\sqrt{\log k})}+n^{O(1)}$ \\
+Max-Cut & no $2^{o(k)}n^{O(1)}$ \cite{CJ03} & $2^{O(k/\sqrt{\log k})}+n^{O(1)}$ \\
+Max-$c$-SAT, fixed $c\ge2$ & no $2^{o(k)}n^{O(1)}$ \cite{CJ03} & $2^{O_c(k/\sqrt{\log k})}+n^{O(1)}$ \\
+IS, VC, DS, degree $\le\Delta$, $\Delta\ge3$ & no $2^{o(k)}n^{O(1)}$ \cite{CJ03} & $2^{O_\Delta(k/\sqrt{\log k})}+n^{O(1)}$ \\
+Counting DS, degree $\le\Delta$ & (as for decision) & $2^{O_\Delta(k/\sqrt{\log k})}+n^{O(1)}$ \\
+\bottomrule
+\end{tabular}
+\caption{Lower bounds that were conditional on ETH, and the algorithms obtained here. IS, VC and DS stand for Independent Set, Vertex Cover and Dominating Set.}
+\label{tab:results}
+\end{table}
+
+\subsection{Relation to prior work}
+
+Combined with the claimed refutation of ETH, the theorem of Cai and Juedes~\cite{CJ03} already gives the \emph{existence} of $2^{o(k)}p(n)$-time algorithms for every Max-SNP-complete problem. By Papadimitriou and Yannakakis~\cite{PY91}, this class includes \MC, \MS{} for $c\ge 2$, and the bounded-degree versions of \IS, \VC{} and \DS. Anthropic's paper~\cite[Corollary~7]{Cla26} gives, for every $\delta>0$, $O(2^{\delta n})$-time algorithms that count the vertex covers, independent sets and dominating sets of a given size in an $n$-vertex graph. Applied to the Nemhauser--Trotter kernel with at most $2k$ vertices~\cite{NT75}, this gives a qualitative $2^{o(k)}+n^{O(1)}$ algorithm for \VC{} on general graphs. Applied with the trivial bound $n\le(\Delta+1)k$, it gives the counting statement in part (d).
+
+So the qualitative content of Theorem~\ref{thm:main} is not new. What this note adds is the following.
+\begin{enumerate}[label=(\roman*)]
+\item Explicit rates: $k/\sqrt{\log k}$, or $k\log\log k/\sqrt{\log k}$ for \VC{} on general graphs, rather than an unspecified $o(k)$ (or ``$O(2^{\delta k})$ for every $\delta>0$'').
+\item Short direct proofs that use the counting theorem as a black box. They can be checked without the machinery of~\cite{CJ03}.
+\end{enumerate}
+We state the bounds in the additive form $f(k)+n^{O(1)}$ because that is how the algorithms run. Since $f(k)p(n)\le f(k)^2+p(n)^2$, this form is not stronger than $2^{O(\cdot)}n^{O(1)}$.
+
+\subsection{Caveats}
+
+Everything here is conditional on Theorem~\ref{thm:blackbox}, which has not been independently verified. The bounds are purely asymptotic. The authors of~\cite{Cla26} estimate that their algorithm does not improve on exhaustive search for general 3-CNFs unless $n$ is astronomically large. Our reductions add only polynomial overhead and constant-factor blowups in the number of variables, so the same remark applies to every algorithm here.
+
+\section{Preliminaries}
+
+\subsection{The counting theorem}
+
+A \emph{$w$-CNF} on a declared set of $N$ variables is a finite multiset of clauses, each a nonempty set of at most $w$ literals over these variables. Declared variables need not occur in any clause. We write $\#F$ for the number of assignments to all $N$ declared variables that satisfy $F$.
+
+\begin{theorem}[Claimed in {\cite[Theorem~1.1]{Ope26}}; see also {\cite[Theorem~1]{Cla26}}]\label{thm:blackbox}
+For each fixed $w\ge 2$ there is a deterministic algorithm that, given a $w$-CNF $F$ on $N\ge 20$ declared variables with $M$ clauses, computes $\#F$ in time $(N+M)^{O_w(1)}\,2^{O_w(\varphi(N))}$. For each fixed $D>0$, its running time on inputs with $M\le DN$ is $(N+M)^{O_{w,D}(1)}\,2^{O_{w,D}(\psi(N))}$.
+\end{theorem}
+
+Theorem~\ref{thm:blackbox} is OpenAI's Theorem~1.1 as stated~\cite{Ope26}. Anthropic's Theorem~1~\cite{Cla26} claims a bound of $2^{O(\min\{w^2 n\log\log n/\sqrt{\log n},\; wM/\sqrt{\log M}\})}$, where $n$ is the number of variables that occur and a formula is a \emph{set} of clauses. This implies bounds of the same form: remove repeated clauses first, multiply the count by $2^{N-n}$ for declared variables that do not occur, and note that $t\mapsto t\log\log t/\sqrt{\log t}$ and $t\mapsto t/\sqrt{\log t}$ are increasing for large $t$. We use Theorem~\ref{thm:blackbox} only through Lemma~\ref{lem:transfer}.
+
+\begin{lemma}[Counting and search]\label{lem:transfer}
+Fix $w\ge 2$ and $D>0$. Given a $w$-CNF $F$ on $N\ge 20$ declared variables with $M$ clauses, one can deterministically compute $\#F$ and, if $\#F>0$, a satisfying assignment, in time $(N+M)^{O_w(1)}2^{O_w(\varphi(N))}$. If $M\le DN$, the time is $(N+M)^{O_{w,D}(1)}2^{O_{w,D}(\psi(N))}$.
+\end{lemma}
+
+\begin{proof}
+Counting is Theorem~\ref{thm:blackbox}. For search, use the standard self-reduction. Process the variables $x_1,\dots,x_N$ in order. Keep a set $U$ of unit clauses, initially empty. At step $i$, compute $\#(F\cup U\cup\{\{x_i\}\})$. If it is positive, add $\{x_i\}$ to $U$; otherwise add $\{\neg x_i\}$. By induction $\#(F\cup U)>0$ after every step, so after step $N$ the clauses of $U$ define a satisfying assignment of $F$. Each query is a $w$-CNF on the same $N$ declared variables with at most $M+N$ clauses. When $M\le DN$, this is at most $(D+1)N$. So each of the $N$ queries satisfies the bound of Theorem~\ref{thm:blackbox}, with $D+1$ in place of $D$.
+\end{proof}
+
+\begin{fact}\label{fact:rates}
+Let $C\ge1$ and put $N=\lceil Ck\rceil$. For all $k\ge\max\{2C,8\}$ with $N\ge 20$ we have $\varphi(N)\le 4C\varphi(k)$ and $\psi(N)\le 2C\psi(k)$. Moreover, for every polynomial $p$, $p(k)\,2^{O(\psi(k))}=2^{O(\psi(k))}$ and $p(k)\,2^{O(\varphi(k))}=2^{O(\varphi(k))}$.
+\end{fact}
+
+\begin{proof}
+We have $N\le 2Ck$ and, since $k\ge 2C$, $\log N\le\log(2C)+\log k\le 2\log k$. As $k\ge 8>e^2$, we get $\log\log k\ge\log 2$, so $\log\log N\le \log 2+\log\log k\le 2\log\log k$. Also $\sqrt{\log N}\ge\sqrt{\log k}$. Hence $\varphi(N)\le 2Ck\cdot 2\log\log k/\sqrt{\log k}=4C\varphi(k)$, and $\psi(N)\le 2C\psi(k)$. The last claim holds because $\psi(k)/\log k=\sqrt{k^2/\log^3 k}\to\infty$, and $\varphi(k)\ge\psi(k)$ for $k\ge 16$.
+\end{proof}
+
+\subsection{Circuits and count-preserving CNF encodings}
+
+A \emph{circuit} has input variables $x_1,\dots,x_N$ and gates of types \textsc{and}, \textsc{or}, \textsc{xor} (fan-in 2) and \textsc{not} (fan-in 1), and one designated output, which may be a gate or an input.
+
+\begin{lemma}[Tseitin encoding~\cite{Tse68}]\label{lem:tseitin}
+Let $C$ be a circuit with inputs $x_1,\dots,x_N$ and $G$ gates, whose output is a gate or an input. One can compute in polynomial time a $3$-CNF $T_C$ on the variables $x_1,\dots,x_N$ and one new variable $g$ per gate, with at most $4G+1$ clauses. Every $x\in\{0,1\}^N$ with $C(x)=1$ extends to exactly one satisfying assignment of $T_C$, and every $x$ with $C(x)=0$ extends to none.
+\end{lemma}
+
+\begin{proof}
+For each gate add clauses that hold exactly when its variable equals the gate's value on its inputs. For $g=a\wedge b$ use $\{\neg g,a\}$, $\{\neg g,b\}$, $\{g,\neg a,\neg b\}$. For $g=a\vee b$ use $\{g,\neg a\}$, $\{g,\neg b\}$, $\{\neg g,a,b\}$. For $g=a\oplus b$ use $\{\neg g,a,b\}$, $\{\neg g,\neg a,\neg b\}$, $\{g,\neg a,b\}$, $\{g,a,\neg b\}$. For $g=\neg a$ use $\{g,a\}$, $\{\neg g,\neg a\}$. Finally add the unit clause $\{g_{\mathrm{out}}\}$, where $g_{\mathrm{out}}$ is the variable of the output (a gate variable or an input variable). Given $x$, the gate clauses force every gate variable, in topological order, to the value of its gate. So exactly one extension satisfies them, and it satisfies $\{g_{\mathrm{out}}\}$ if and only if $C(x)=1$.
+\end{proof}
+
+\begin{lemma}[Linear-size cardinality constraints]\label{lem:card}
+There is an absolute constant $c_0$ such that for every $N\ge 1$, every integer $s$ and every relation ${\bowtie}\in\{\le,=,\ge\}$, one can compute in time polynomial in $N$ a circuit with at most $c_0N$ gates that computes $[\,x_1+\dots+x_N\bowtie s\,]$.
+\end{lemma}
+
+\begin{proof}
+\emph{Summation.} We compute the binary representation of $\Sigma=x_1+\dots+x_N$ with a balanced tree of ripple-carry adders. Level $0$ consists of the $N$ input bits, viewed as 1-bit numbers. Level $j\ge1$ is formed by pairing up the numbers of level $j-1$, adding each pair, and passing an unpaired number up unchanged. A number at level $j-1$ is a sum of at most $2^{j-1}$ inputs, so it has at most $j$ bits. Adding two numbers of at most $j$ bits takes at most $j$ full or half adders, each of at most $5$ gates (sum $a\oplus b\oplus c$, carry $(a\wedge b)\vee(c\wedge(a\oplus b))$). Level $j-1$ has at most $\lceil N/2^{j-1}\rceil$ numbers, so level $j$ performs at most $N/2^j+1$ additions. There are $L=\lceil\log_2N\rceil$ levels, so the total number of gates is at most
+\[
+\sum_{j=1}^{L}5j\Bigl(\frac{N}{2^j}+1\Bigr)\le 10N+\tfrac52L(L+1)=O(N).
+\]
+Since $\Sigma\le N$, its binary representation is $y_{b-1}\dots y_0$ with $b=\lfloor\log_2N\rfloor+1$. The tree may output further, more significant bits; these are identically $0$ and are discarded.
+
+\emph{Comparison.} If $s<0$ or $s>N$, the relation has the same truth value for every $x$. A constant can be computed with at most three gates, as $x_1\wedge\neg x_1$ or $\neg(x_1\wedge\neg x_1)$. Otherwise write $s=\sum_i s_i2^i$ with $s_i\in\{0,1\}$ for $i<b$. Let $\ell_i=y_i$ if $s_i=1$, and $\ell_i=\neg y_i$ if $s_i=0$, so that $\ell_i=1$ exactly when $y_i=s_i$. Then $[\Sigma=s]=\bigwedge_i\ell_i$. Let $e_i=\bigwedge_{j>i}\ell_j$, computed as a chain. Then
+\[
+[\Sigma>s]=\bigvee_{i:\,s_i=0}(y_i\wedge e_i),\quad [\Sigma\le s]=\neg[\Sigma>s],\quad [\Sigma\ge s]=[\Sigma>s]\vee[\Sigma=s].
+\]
+Here an empty conjunction is $1$ and is simply omitted, and an empty disjunction is the constant $0$, computed as above. These use $O(b)=O(\log N)$ further gates. In total there are $O(N)$ gates, and the circuit is clearly computable in polynomial time.
+\end{proof}
+
+\begin{corollary}[Cardinality gadget]\label{cor:gadget}
+For $N\ge1$, an integer $s$ and ${\bowtie}\in\{\le,=,\ge\}$, there is a $3$-CNF $\Gamma^{\bowtie s}(x_1,\dots,x_N;z)$, computable in polynomial time, with at most $c_0N$ auxiliary variables $z$ and at most $4c_0N+1$ clauses. Every $x$ with $\sum x_i\bowtie s$ extends to exactly one satisfying assignment, and every other $x$ extends to none.
+\end{corollary}
+
+\begin{proof}
+Apply Lemma~\ref{lem:tseitin} to the circuit of Lemma~\ref{lem:card}.
+\end{proof}
+
+\subsection{Padding}
+If $F$ is a $w$-CNF on a declared set $X$ of variables and $X'\supseteq X$, then $F$ is also a $w$-CNF on $X'$, and its count on $X'$ is $2^{|X'\setminus X|}$ times its count on $X$. Restricting a satisfying assignment from $X'$ to $X$ gives one on $X$. So we may always declare $N=\max\{20,\lceil Ck\rceil\}$ variables, where $C$ is any constant with $|X|\le Ck$. With Fact~\ref{fact:rates}, Lemma~\ref{lem:transfer} then gives running times in terms of $\varphi(k)$ or $\psi(k)$ directly, with no monotonicity argument needed. For $k$ below a constant depending only on the problem (and on $c$ or $\Delta$), the reduced instances below have $O(1)$ size and are solved by exhaustive search in constant time. Likewise, if a reduced instance below is empty (no edges, clauses or vertices remain), the answer is read off directly, so Corollary~\ref{cor:gadget} is only applied with $N\ge1$.
+
+\section{Vertex Cover}
+
+\begin{theorem}\label{thm:vc}
+Assume Theorem~\ref{thm:blackbox}. There is a deterministic algorithm that, given a graph $G$ on $n$ vertices and an integer $k$, decides whether $G$ has a vertex cover of size at most $k$, and finds one if so, in time $2^{O(\varphi(k))}+n^{O(1)}$.
+\end{theorem}
+
+\begin{proof}
+\emph{Kernel.} We use the kernel of Nemhauser and Trotter~\cite{NT75}, in the form of Chen, Kanj and Jia~\cite{CKJ01}; see also~\cite[Chapter~2]{CFK15}. In polynomial time, compute a half-integral optimal solution $x^*$ of the linear programming relaxation of \VC. Let $V_1=\{v:x^*_v=1\}$, $V_0=\{v:x^*_v=0\}$ and $V_{1/2}=\{v:x^*_v=\frac12\}$. If $\sum_v x^*_v>k$, answer no. By the Nemhauser--Trotter theorem, some minimum vertex cover $S$ satisfies $V_1\subseteq S\subseteq V_1\cup V_{1/2}$. Hence $G$ has a vertex cover of size at most $k$ if and only if $G'=G[V_{1/2}]$ has one of size at most $k'=k-|V_1|$. Moreover, any such cover $S'$ of $G'$ yields the cover $S'\cup V_1$ of $G$. Since $|V_1|+\frac12|V_{1/2}|=\sum_v x_v^*\le k$, we have $N_0=|V_{1/2}|\le 2k'\le 2k$. If $k'\ge N_0$, then $V_{1/2}$ itself is a cover of size at most $k'$, and we are done.
+
+\emph{Encoding.} Introduce a variable $x_v$ for each $v\in V_{1/2}$. Let $F$ consist of the clause $\{x_u,x_v\}$ for each edge $uv$ of $G'$, together with $\Gamma^{\le k'}(x;z)$ from Corollary~\ref{cor:gadget}. Then $F$ is a $3$-CNF with at most $(1+c_0)N_0\le 2(1+c_0)k$ variables and $O(k^2)$ clauses. Its satisfying assignments correspond bijectively to the vertex covers of $G'$ of size at most $k'$, via $S'=\{v:x_v=1\}$. Declare $N=\max\{20,\lceil 2(1+c_0)k\rceil\}$ variables and apply Lemma~\ref{lem:transfer} in its general form. This decides the instance and, if it is a yes-instance, finds $S'$, in time $\poly(k)\,2^{O(\varphi(N))}$. By Fact~\ref{fact:rates} this is $2^{O(\varphi(k))}$. Adding the polynomial-time kernelization gives the bound.
+\end{proof}
+
+\begin{remark}
+The rate in Theorem~\ref{thm:vc} has the extra $\log\log k$ factor because the kernel can have $\Theta(k^2)$ edges, so the sparse case of Theorem~\ref{thm:blackbox} does not apply. On graphs of bounded degree we obtain the rate $\psi(k)$ (Theorem~\ref{thm:bdeg}). We do not know whether $2^{O(\psi(k))}+n^{O(1)}$ is attainable for \VC{} on general graphs. By the result of Dell and van Melkebeek~\cite{DvM14}, \VC{} has no polynomial-time compression to bitsize $O(k^{2-\varepsilon})$ unless $\mathrm{coNP}\subseteq\mathrm{NP}/\mathrm{poly}$. A kernel with $O(k^{2-\varepsilon})$ edges would, after deleting isolated vertices, have bitsize $O(k^{2-\varepsilon}\log k)$. So a route other than a sparse polynomial-time kernel would be needed.
+\end{remark}
+
+\section{Max-Cut and Max-\texorpdfstring{$c$}{c}-SAT}
+
+\begin{theorem}\label{thm:maxcut}
+Assume Theorem~\ref{thm:blackbox}. There is a deterministic algorithm that, given a simple graph $G$ with $m$ edges and an integer $k$, decides whether $G$ has a cut with at least $k$ edges, and finds one if so, in time $2^{O(\psi(k))}+n^{O(1)}$.
+\end{theorem}
+
+\begin{proof}
+If $k\le0$ the answer is trivially yes, so let $k\ge1$. \emph{Large instances.} Every graph has a cut with at least $m/2$ edges, and such a cut is found by local search. Start from any bipartition. While some vertex has more incident edges inside its side than across, move it to the other side. Each move increases the cut by at least one, so there are at most $m$ moves. At the end, every vertex $v$ has at least $\deg(v)/2$ incident cut edges. Summing over $v$ gives $2|\mathrm{cut}|\ge m$. Hence if $m\ge 2k$, the answer is yes, and local search finds a witness.
+
+\emph{Small instances.} Now let $m\le 2k-1$. Delete isolated vertices, which never affect a cut. The remaining graph has $N_0\le 2m<4k$ vertices. Take variables $x_v$ for each vertex and $y_e$ for each edge $e=uv$. For each edge add the four clauses of width 3 that express $y_e=x_u\oplus x_v$, as in the proof of Lemma~\ref{lem:tseitin}. Add $\Gamma^{\ge k}(y;z)$ on the $m$ variables $y_e$. The resulting $3$-CNF $F$ has at most $N_0+m+c_0m<(6+2c_0)k$ variables and at most $4m+4c_0m+1=O(k)$ clauses. For each assignment to the $x_v$, the values of the $y_e$ are forced, and they mark exactly the cut edges. The gadget then admits exactly one extension if the cut has at least $k$ edges, and none otherwise. So $\#F$ is the number of bipartitions (as ordered pairs) of the non-isolated vertices with at least $k$ cut edges. Declare $N=\max\{20,\lceil(6+2c_0)k\rceil\}$ variables. Since $M=O(k)\le DN$ for an absolute constant $D$, the sparse case of Lemma~\ref{lem:transfer} applies and runs in time $\poly(k)\,2^{O(\psi(N))}=2^{O(\psi(k))}$ by Fact~\ref{fact:rates}.
+\end{proof}
+
+\begin{theorem}\label{thm:maxsat}
+Assume Theorem~\ref{thm:blackbox}, and fix $c\ge1$. There is a deterministic algorithm that, given a multiset of $m$ nonempty clauses, each with at most $c$ literals, and an integer $k$, decides whether some assignment satisfies at least $k$ of the clauses, and finds one if so, in time $2^{O_c(\psi(k))}+n^{O(1)}$.
+\end{theorem}
+
+\begin{proof}
+\emph{Large instances.} Under a uniformly random assignment, a clause with $r\ge1$ literals is satisfied with probability $1$ if it contains a complementary pair, and with probability $1-2^{-r}\ge\frac12$ otherwise. So the expected number of satisfied clauses is at least $m/2$. The method of conditional expectations fixes the variables one at a time without decreasing this expectation, and so finds in polynomial time an assignment satisfying at least $\lceil m/2\rceil$ clauses. Hence if $m\ge 2k$, the answer is yes, with a witness.
+
+\emph{Small instances.} Now let $m\le 2k-1$, and let $X$ be the set of variables occurring in the clauses, so $|X|\le cm$. For each clause $C_j=\{\ell_1,\dots,\ell_r\}$ add a variable $y_j$ and the clauses $\{\neg y_j,\ell_1,\dots,\ell_r\}$ and $\{y_j,\neg\ell_i\}$ for $i=1,\dots,r$. Together they express $y_j\leftrightarrow C_j$. Add $\Gamma^{\ge k}(y;z)$. The resulting $w$-CNF, with $w=\max\{3,c+1\}$, has at most $cm+m+c_0m<2(c+1+c_0)k$ variables and at most $(c+1)m+4c_0m+1=O_c(k)$ clauses. For each assignment to $X$, the $y_j$ are forced to record which clauses are satisfied, and the gadget accepts exactly when at least $k$ are. Declaring $N=\max\{20,\lceil 2(c+1+c_0)k\rceil\}$ variables, the number of clauses is at most $DN$ with $D$ depending only on $c$. The sparse case of Lemma~\ref{lem:transfer} gives time $2^{O_c(\psi(k))}$.
+\end{proof}
+
+\section{Problems on graphs of bounded degree}
+
+\begin{theorem}\label{thm:bdeg}
+Assume Theorem~\ref{thm:blackbox}, and fix $\Delta\ge1$. Given a graph $G$ on $n$ vertices of maximum degree at most $\Delta$ and an integer $k$, each of the following can be done deterministically in time $2^{O_\Delta(\psi(k))}+n^{O(1)}$.
+\begin{enumerate}[label=(\alph*)]
+\item Decide whether $G$ has an independent set of size at least $k$, and find one if so.
+\item Decide whether $G$ has a vertex cover of size at most $k$, and find one if so.
+\item Compute, for every $s\le k$, the number of dominating sets of $G$ of size exactly $s$. In particular, decide whether $G$ has a dominating set of size at most $k$, and find one if so.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+(a) Greedily pick a vertex, add it to the set, and delete it and its neighbours. Each step deletes at most $\Delta+1$ vertices, so this finds an independent set of size at least $\lceil n/(\Delta+1)\rceil$. If $n\ge(\Delta+1)k$, we are done. Otherwise $n<(\Delta+1)k$ and $G$ has at most $\Delta n/2$ edges. Use variables $x_v$, clauses $\{\neg x_u,\neg x_v\}$ for the edges, and $\Gamma^{\ge k}(x;z)$. This is a $3$-CNF with $O_\Delta(k)$ variables and $O_\Delta(k)$ clauses whose satisfying assignments correspond to the independent sets of size at least $k$. Apply the sparse case of Lemma~\ref{lem:transfer} after padding.
+
+(b) Each vertex covers at most $\Delta$ edges, so if $m>\Delta k$ the answer is no. Otherwise delete isolated vertices, which are never needed in a minimum cover. At most $2m\le 2\Delta k$ vertices remain. Use variables $x_v$, clauses $\{x_u,x_v\}$ for the edges, and $\Gamma^{\le k}(x;z)$. This is a $3$-CNF with $O_\Delta(k)$ variables and clauses. Apply the sparse case of Lemma~\ref{lem:transfer}.
+
+(c) Every vertex dominates at most $\Delta+1$ vertices (itself and its neighbours), so every dominating set has size at least $n/(\Delta+1)$. If $n>(\Delta+1)k$, all the counts are $0$. Otherwise $n\le(\Delta+1)k$. For each $s\le k$, let $F_s$ consist of the clause $\{x_u:u\in N[v]\}$ for each vertex $v$, where $N[v]$ is the closed neighbourhood, of width at most $\Delta+1$, together with $\Gamma^{=s}(x;z)$. Then $F_s$ is a $w$-CNF with $w=\max\{3,\Delta+1\}$, $O_\Delta(k)$ variables and $O_\Delta(k)$ clauses. By Corollary~\ref{cor:gadget}, the number of its satisfying assignments is exactly the number of dominating sets of size $s$. Padding multiplies the count by a known power of two, which we divide out. Apply Lemma~\ref{lem:transfer} for each of the $k+1$ values of $s$. For the decision and search statement, use $\Gamma^{\le k}$ instead and the search part of Lemma~\ref{lem:transfer}.
+\end{proof}
+
+\begin{remark}
+On planar graphs, \IS, \VC{} and \DS{} already have $2^{O(\sqrt k)}n^{O(1)}$ algorithms through bidimensionality (see~\cite[Chapter~7]{CFK15}). On planar graphs of bounded degree, these are better than Theorem~\ref{thm:bdeg}. ETH-based lower bounds of the form $2^{o(\sqrt k)}n^{O(1)}$ for planar problems (see~\cite[Chapter~14]{CFK15}) lose their basis if ETH is false, but our method gives no algorithms that beat $2^{O(\sqrt k)}$.
+\end{remark}
+
+\section{Discussion}
+
+\subsection{What does not follow}
+A refutation of ETH removes the basis of many lower bounds but does not by itself supply matching algorithms. Our approach needs an encoding with $O(k)$ variables after a polynomial-time reduction. It gives nothing, for example, for $k$-\textsc{Path} or \textsc{Feedback Vertex Set}. Their natural encodings use $\omega(k)$ variables, or constraints such as connectivity and acyclicity that we do not know how to express with $O(k)$ variables. It also gives nothing for $k$-\textsc{Clique}, where the ETH-based lower bound has the form $f(k)n^{o(k)}$~\cite{CHKX06}. That problem is $W[1]$-hard, and nothing here bears on $W[1]$ versus $\FPT$. The equivalence between ETH and $M[1]\ne\FPT$ (\cite{DEFPR03}; see also~\cite{CG07} and~\cite[Section~16.6]{FG06}) shows that the claimed refutation also yields $M[1]=\FPT$. This uses that the running time in Theorem~\ref{thm:blackbox} has the computable form $2^{C\varphi(N)}$ for some constant $C$, so the $o(N)$ in the exponent is effective.
+
+\subsection{Open questions}
+\begin{enumerate}[label=(\arabic*)]
+\item Can \VC{} on general graphs be solved in time $2^{O(k/\sqrt{\log k})}+n^{O(1)}$, matching the bounded-degree rate?
+\item Crowston, Jones and Mnich~\cite{CJM12} showed, under ETH, that \MC{} parameterized above the Edwards--Erd\H{o}s bound has no $2^{o(k)}n^{O(1)}$ algorithm. Is it solvable in time $2^{o(k)}n^{O(1)}$? Etscheid and Mnich~\cite{EM18} give a kernel with $O(k)$ vertices, but our method would need one whose number of edges is also $O(k)$. Encoding the cut size of a graph with $N$ vertices and $\omega(N)$ edges with $O(N)$ variables appears to require new ideas.
+\item Relatedly, does exact \MC{} on dense $n$-vertex graphs admit a $2^{o(n)}$ algorithm? Theorem~\ref{thm:blackbox} gives one when $m=O(n)$, by the encoding in the proof of Theorem~\ref{thm:maxcut}.
+\end{enumerate}
+
+\section*{Disclosure of AI assistance}
+The results in this note were identified, and the proofs and text were drafted, with the assistance of Claude (Anthropic), an AI model. The author takes responsibility for the content. The underlying counting theorem (Theorem~\ref{thm:blackbox}) is due to~\cite{Ope26,Cla26}, whose results were themselves produced by AI models and are under independent review.
+
+\begin{thebibliography}{DEF+03}
+
+\bibitem[CFK+15]{CFK15}
+M.~Cygan, F.~V. Fomin, {\L}.~Kowalik, D.~Lokshtanov, D.~Marx, M.~Pilipczuk, M.~Pilipczuk, and S.~Saurabh.
+\newblock \emph{Parameterized Algorithms}.
+\newblock Springer, 2015.
+
+\bibitem[CG07]{CG07}
+Y.~Chen and M.~Grohe.
+\newblock An isomorphism between subexponential and parameterized complexity theory.
+\newblock \emph{SIAM Journal on Computing}, 37(4):1228--1258, 2007.
+
+\bibitem[CHKX06]{CHKX06}
+J.~Chen, X.~Huang, I.~A. Kanj, and G.~Xia.
+\newblock Strong computational lower bounds via parameterized complexity.
+\newblock \emph{Journal of Computer and System Sciences}, 72(8):1346--1367, 2006.
+
+\bibitem[CJ03]{CJ03}
+L.~Cai and D.~Juedes.
+\newblock On the existence of subexponential parameterized algorithms.
+\newblock \emph{Journal of Computer and System Sciences}, 67(4):789--807, 2003.
+
+\bibitem[CJM15]{CJM12}
+R.~Crowston, M.~Jones, and M.~Mnich.
+\newblock Max-Cut parameterized above the Edwards--Erd\H{o}s bound.
+\newblock \emph{Algorithmica}, 72(3):734--757, 2015. Conference version in ICALP 2012; arXiv:1112.3506.
+
+\bibitem[CKJ01]{CKJ01}
+J.~Chen, I.~A. Kanj, and W.~Jia.
+\newblock Vertex cover: further observations and further improvements.
+\newblock \emph{Journal of Algorithms}, 41(2):280--301, 2001.
+
+\bibitem[Cla26]{Cla26}
+Claude (Anthropic).
+\newblock A $2^{o(n)}$ time algorithm for 3-SAT.
+\newblock Manuscript, October 26, 2026. \url{https://github.com/anthropics/formal-math/tree/main/eth}.
+
+\bibitem[DEF+03]{DEFPR03}
+R.~Downey, V.~Estivill-Castro, M.~Fellows, E.~Prieto, and F.~Rosamond.
+\newblock Cutting up is hard to do: the parameterized complexity of $k$-cut and related problems.
+\newblock \emph{Electronic Notes in Theoretical Computer Science}, 78:209--222, 2003.
+
+\bibitem[DvM14]{DvM14}
+H.~Dell and D.~van Melkebeek.
+\newblock Satisfiability allows no nontrivial sparsification unless the polynomial-time hierarchy collapses.
+\newblock \emph{Journal of the ACM}, 61(4):23:1--23:27, 2014.
+
+\bibitem[EM18]{EM18}
+M.~Etscheid and M.~Mnich.
+\newblock Linear kernels and linear-time algorithms for finding large cuts.
+\newblock \emph{Algorithmica}, 80(9):2574--2615, 2018.
+
+\bibitem[FG06]{FG06}
+J.~Flum and M.~Grohe.
+\newblock \emph{Parameterized Complexity Theory}.
+\newblock Springer, 2006.
+
+\bibitem[IP01]{IP01}
+R.~Impagliazzo and R.~Paturi.
+\newblock On the complexity of $k$-SAT.
+\newblock \emph{Journal of Computer and System Sciences}, 62(2):367--375, 2001.
+
+\bibitem[IPZ01]{IPZ01}
+R.~Impagliazzo, R.~Paturi, and F.~Zane.
+\newblock Which problems have strongly exponential complexity?
+\newblock \emph{Journal of Computer and System Sciences}, 63(4):512--530, 2001.
+
+\bibitem[NT75]{NT75}
+G.~L. Nemhauser and L.~E. Trotter, Jr.
+\newblock Vertex packings: structural properties and algorithms.
+\newblock \emph{Mathematical Programming}, 8:232--248, 1975.
+
+\bibitem[Ope26]{Ope26}
+OpenAI.
+\newblock The Exponential Time Hypothesis is false.
+\newblock Manuscript, October 17, 2026, revised October 25, 2026. \url{https://github.com/openai/math/blob/main/preprints/The-Exponential-Time-Hypothesis-is-False-October-25-2026/paper.pdf}.
+
+\bibitem[PY91]{PY91}
+C.~H. Papadimitriou and M.~Yannakakis.
+\newblock Optimization, approximation, and complexity classes.
+\newblock \emph{Journal of Computer and System Sciences}, 43(3):425--440, 1991.
+
+\bibitem[Tse68]{Tse68}
+G.~S. Tseitin.
+\newblock On the complexity of derivation in propositional calculus.
+\newblock In A.~O. Slisenko, editor, \emph{Studies in Constructive Mathematics and Mathematical Logic, Part II}, pages 115--125. Consultants Bureau, New York, 1970. Russian original 1968.
+
+\end{thebibliography}
+
+\end{document}

@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you refer to this note, please cite it as below."
+title: "Subexponential parameterized algorithms from the claimed refutation of ETH: Vertex Cover, Max-Cut, Max-c-SAT and bounded-degree problems in time 2^{o(k)}"
+authors:
+  - family-names: Sukruth
+    given-names: Dhanush P
+    affiliation: "University of Maryland, College Park"
+    email: sukruthdhanush@gmail.com
+date-released: 2026-11-01
+type: article
+repository-code: "https://github.com/dsukruth/eth-parameterized-note"
+keywords:
+  - Exponential Time Hypothesis
+  - parameterized complexity
+  - subexponential algorithms
+  - vertex cover
+  - max-cut
