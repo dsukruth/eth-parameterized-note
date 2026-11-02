@@ -1,6 +1,6 @@
 # Subexponential parameterized algorithms from the claimed refutation of ETH
 
-**Dhanush P Sukruth** · University of Maryland, College Park · November 1, 2026
+**Dhanush P Sukruth** · November 1, 2026
 
 **[paper.pdf](paper.pdf)** · LaTeX source: [paper.tex](paper.tex)
 
